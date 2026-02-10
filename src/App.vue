@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import Greet from '@/components/Greet.vue'
+import DefaultLayout from '@/layouts/DefaultLayout.vue'
+import { RouterView } from 'vue-router'
 </script>
 
 <template>
-  <Greet />
+  <DefaultLayout>
+    <RouterView />
+  </DefaultLayout>
 </template>
