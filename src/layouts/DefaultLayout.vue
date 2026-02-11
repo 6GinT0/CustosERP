@@ -97,6 +97,7 @@ const isActiveTaxonomyGroup = (item: any) => {
                   v-bind="props"
                   :prepend-icon="item.icon"
                   :title="item.title"
+                  :class="isActiveTaxonomyGroup(item) ? 'bg-indigo-lighten-5' : ''"
                   :active="isActiveTaxonomyGroup(item)"
                   :color="isActiveTaxonomyGroup(item) ? 'indigo-darken-3' : ''"
                 />
