@@ -1,4 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
+import NotFound from '@/views/404.vue'
 
 const routes = [
   {
@@ -38,11 +39,34 @@ const routes = [
       },
     ],
   },
+  {
+    path: '/404',
+    name: 'NotFound',
+    component: NotFound,
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: () => ({ name: 'NotFound' }),
+  },
 ]
 
 const router = createRouter({
   history: createWebHashHistory(),
   routes,
+})
+
+router.beforeEach((to, from, next) => {
+  if (to.name === 'Taxonomy') {
+    const allowedTaxonomies = ['areas', 'sectors', 'reasons']
+
+    if (!allowedTaxonomies.includes(to.params.taxonomy as string)) {
+      next({ name: 'NotFound' })
+
+      return
+    }
+  }
+
+  next()
 })
 
 export default router
