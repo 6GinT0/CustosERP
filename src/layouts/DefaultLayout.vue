@@ -7,7 +7,14 @@ const route = useRoute()
 const drawer = ref(true)
 const rail = ref(true)
 
-const navItems = [
+type NavItem = {
+  title: string
+  icon: string
+  to?: string | { name: string; params: Record<string, string> }
+  children?: NavItem[]
+}
+
+const navItems: NavItem[] = [
   {
     title: 'Dashboard',
     icon: 'mdi-home',
@@ -19,35 +26,19 @@ const navItems = [
     to: '/inspections',
   },
   {
+    title: 'Categorías',
+    icon: 'mdi-shape-outline',
+    to: '/categories',
+  },
+  {
+    title: 'Items',
+    icon: 'mdi-tag-multiple-outline',
+    to: '/items',
+  },
+  {
     title: 'Taxonomías',
     icon: 'mdi-database-outline',
-    children: [
-      {
-        title: 'Zonas',
-        icon: 'mdi-map-marker-radius-outline',
-        to: { name: 'Taxonomy', params: { taxonomy: 'areas' } },
-      },
-      {
-        title: 'Sectores',
-        icon: 'mdi-office-building-outline',
-        to: { name: 'Taxonomy', params: { taxonomy: 'sectors' } },
-      },
-      {
-        title: 'Categorías',
-        icon: 'mdi-shape-outline',
-        to: '/taxonomies/categories',
-      },
-      {
-        title: 'Items',
-        icon: 'mdi-tag-multiple-outline',
-        to: '/taxonomies/items',
-      },
-      {
-        title: 'Motivos',
-        icon: 'mdi-comment-question-outline',
-        to: { name: 'Taxonomy', params: { taxonomy: 'reasons' } },
-      },
-    ],
+    to: '/taxonomies',
   },
 ]
 
@@ -105,21 +96,22 @@ const isActiveTaxonomyGroup = (item: any) => {
               <v-list-item
                 v-for="(child, j) in item.children"
                 :key="j"
+                v-show="child.to"
                 :prepend-icon="child.icon"
                 :title="child.title"
-                :to="child.to"
-                :active="isActive(child.to)"
-                :color="isActive(child.to) ? 'indigo-darken-3' : ''"
+                :to="child.to!"
+                :active="child.to ? isActive(child.to) : false"
+                :color="child.to && isActive(child.to) ? 'indigo-darken-3' : ''"
               />
             </v-list-group>
 
             <v-list-item
-              v-else
+              v-else-if="item.to"
               :prepend-icon="item.icon"
               :title="item.title"
-              :to="item.to"
-              :active="isActive(item.to)"
-              :color="isActive(item.to) ? 'indigo-darken-3' : ''"
+              :to="item.to!"
+              :active="isActive(item.to!)"
+              :color="isActive(item.to!) ? 'indigo-darken-3' : ''"
             />
           </template>
         </v-list>

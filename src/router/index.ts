@@ -20,24 +20,17 @@ const routes = [
   {
     path: '/taxonomies',
     name: 'Taxonomies',
-    redirect: () => ({ name: 'Taxonomy', params: { taxonomy: 'areas' } }),
-    children: [
-      {
-        path: 'categories',
-        name: 'Categories',
-        component: () => import('@/views/taxonomies/CategoriesView.vue'),
-      },
-      {
-        path: 'items',
-        name: 'Items',
-        component: () => import('@/views/taxonomies/CategoriesItemsView.vue'),
-      },
-      {
-        path: ':taxonomy',
-        name: 'Taxonomy',
-        component: () => import('@/views/taxonomies/TaxonomyView.vue'),
-      },
-    ],
+    component: () => import('@/views/TaxonomyView.vue'),
+  },
+  {
+    path: '/categories',
+    name: 'Categories',
+    component: () => import('@/views/CategoriesView.vue'),
+  },
+  {
+    path: '/items',
+    name: 'Items',
+    component: () => import('@/views/CategoriesItemsView.vue'),
   },
   {
     path: '/404',
@@ -53,20 +46,6 @@ const routes = [
 const router = createRouter({
   history: createWebHashHistory(),
   routes,
-})
-
-router.beforeEach((to, from, next) => {
-  if (to.name === 'Taxonomy') {
-    const allowedTaxonomies = ['areas', 'sectors', 'reasons']
-
-    if (!allowedTaxonomies.includes(to.params.taxonomy as string)) {
-      next({ name: 'NotFound' })
-
-      return
-    }
-  }
-
-  next()
 })
 
 export default router
