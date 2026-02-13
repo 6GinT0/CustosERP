@@ -28,23 +28,34 @@ class CategoryService {
     return await db.select<Category[]>('SELECT * FROM categories')
   }
 
-  async create(category: Omit<Category, 'id'>): Promise<void> {
+  async create(category: Omit<Category, 'id'>): Promise<Category> {
     const db = await this.getDb()
 
-    await db.execute('INSERT INTO categories (name, description) VALUES ($1, $2)', [
-      category.name,
+    const result = await db.execute('INSERT INTO categories (name, description) VALUES ($1, $2)', [
+      category.name.toUpperCase(),
       category.description || null,
     ])
+
+    return {
+      ...category,
+      name: category.name.toUpperCase(),
+      id: result.lastInsertId as number,
+    }
   }
 
-  async update(category: Category): Promise<void> {
+  async update(category: Category): Promise<Category> {
     const db = await this.getDb()
 
     await db.execute('UPDATE categories SET name = $1, description = $2 WHERE id = $3', [
-      category.name,
+      category.name.toUpperCase(),
       category.description || null,
       category.id,
     ])
+
+    return {
+      ...category,
+      name: category.name.toUpperCase(),
+    }
   }
 
   async delete(id: number): Promise<void> {

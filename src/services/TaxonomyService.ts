@@ -30,23 +30,34 @@ class TaxonomyService {
     return result
   }
 
-  async create(taxonomy: Omit<Taxonomy, 'id'>): Promise<void> {
+  async create(taxonomy: Omit<Taxonomy, 'id'>): Promise<Taxonomy> {
     const db = await this.getDb()
 
-    await db.execute('INSERT INTO taxonomies (name, type) VALUES ($1, $2)', [
-      taxonomy.name,
+    const result = await db.execute('INSERT INTO taxonomies (name, type) VALUES ($1, $2)', [
+      taxonomy.name.toUpperCase(),
       taxonomy.type,
     ])
+
+    return {
+      ...taxonomy,
+      name: taxonomy.name.toUpperCase(),
+      id: result.lastInsertId as number,
+    }
   }
 
-  async update(taxonomy: Taxonomy): Promise<void> {
+  async update(taxonomy: Taxonomy): Promise<Taxonomy> {
     const db = await this.getDb()
 
     await db.execute('UPDATE taxonomies SET name = $1, type = $2 WHERE id = $3', [
-      taxonomy.name,
+      taxonomy.name.toUpperCase(),
       taxonomy.type,
       taxonomy.id,
     ])
+
+    return {
+      ...taxonomy,
+      name: taxonomy.name.toUpperCase(),
+    }
   }
 
   async delete(id: number): Promise<void> {
