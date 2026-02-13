@@ -1,6 +1,14 @@
 <script setup lang="ts">
-import DefaultLayout from '@/layouts/DefaultLayout.vue'
+import { onMounted } from 'vue'
 import { RouterView } from 'vue-router'
+import { useDatabase } from '@/composables/useDatabase'
+import DefaultLayout from '@/layouts/DefaultLayout.vue'
+
+const { loadInitialData } = useDatabase()
+
+onMounted(async () => {
+  await loadInitialData()
+})
 </script>
 
 <template>
