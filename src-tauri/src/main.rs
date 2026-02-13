@@ -3,7 +3,10 @@
 mod migrations;
 
 fn main() {
-    let migrations = vec![migrations::_1_initial_schema::MIGRATION_1];
+    let migrations = vec![
+        migrations::_1_initial_schema::MIGRATION_1,
+        migrations::_2_initial_data_added::MIGRATION_2,
+    ];
 
     tauri::Builder::default()
         .plugin(
