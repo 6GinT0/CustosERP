@@ -11,6 +11,7 @@ import type { CategoryItem } from '@/types/CategoryItem'
 import TaxonomyDataTable from '@/components/taxonomies/TaxonomyDataTable.vue'
 import TaxonomyFormDialog from '@/components/taxonomies/TaxonomyFormDialog.vue'
 import TaxonomyConfirmDialog from '@/components/taxonomies/TaxonomyConfirmDialog.vue'
+import TaxonomyConfirmBulkDialog from '@/components/taxonomies/TaxonomyConfirmBulkDialog.vue'
 import AppInput from '@/components/AppInput.vue'
 import AppSelect from '@/components/AppSelect.vue'
 
@@ -52,37 +53,33 @@ const categoryHeaders = [
 ]
 
 const onSave = handleSubmit(async (values) => {
-  if (action.value === 'create') {
-    await handleCreate(
-      () => categoryItemService.create(values as any),
-      'Categoría creada con éxito',
-    )
-  } else {
-    if (!selectedItem.value) return
-
+  if (selectedItem.value) {
     await handleUpdate(
       () => categoryItemService.update({ ...selectedItem.value!, ...values } as any),
       'Categoría actualizada con éxito',
+    )
+  } else {
+    await handleCreate(
+      () => categoryItemService.create(values as any),
+      'Categoría creada con éxito',
     )
   }
 })
 
 const onConfirmDelete = async () => {
-  if (action.value === 'remove' && selectedItem.value) {
-    await handleDelete(
-      selectedItem.value.id,
-      () => categoryItemService.delete(selectedItem.value!.id),
-      'Categoría eliminada correctamente',
-    )
-  } else if (action.value === 'removeMany') {
-    const ids = selected.value
+  await handleDelete(
+    selectedItem.value.id,
+    () => categoryItemService.delete(selectedItem.value!.id),
+    'Categoría eliminada correctamente',
+  )
+}
 
-    await handleDeleteMany(
-      ids,
-      () => categoryItemService.deleteMany(ids),
-      'Categorías eliminadas correctamente',
-    )
-  }
+const onConfirmDeleteMany = async () => {
+  await handleDeleteMany(
+    selected.value,
+    () => categoryItemService.deleteMany(selected.value),
+    'Categorías eliminadas correctamente',
+  )
 }
 
 watch(selectedItem, (newItem) => {
@@ -120,8 +117,7 @@ watch(selectedItem, (newItem) => {
     <TaxonomyFormDialog
       v-if="action === 'create' || action === 'edit'"
       v-model:is-dialog-open="isDialogOpen"
-      :action="action"
-      type="items"
+      label="Item"
       :item="selectedItem"
       @cancel="cancel"
       @confirm="onSave"
@@ -141,14 +137,21 @@ watch(selectedItem, (newItem) => {
     </TaxonomyFormDialog>
 
     <TaxonomyConfirmDialog
-      v-else
+      v-if="action === 'remove'"
       v-model:is-dialog-open="isDialogOpen"
-      label="item"
-      :action="action"
+      label="Item"
       :item="selectedItem"
-      :items="selected"
       @cancel="cancel"
       @confirm="onConfirmDelete"
+    />
+
+    <TaxonomyConfirmBulkDialog
+      v-if="action === 'removeMany'"
+      v-model:is-dialog-open="isDialogOpen"
+      label="Item"
+      :items="selected"
+      @cancel="cancel"
+      @confirm="onConfirmDeleteMany"
     />
   </v-container>
 </template>

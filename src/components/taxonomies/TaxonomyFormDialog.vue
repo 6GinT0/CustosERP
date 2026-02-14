@@ -1,35 +1,30 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { TAXONOMY_METADATA, type TaxonomySlug } from '@/constants/taxonomies'
 
 const props = defineProps<{
-  action: 'create' | 'edit'
-  type?: TaxonomySlug
-  item: any
+  label: string
+  item?: any
 }>()
 
 const isOpen = defineModel<boolean>('isDialogOpen')
 const emits = defineEmits(['cancel', 'confirm'])
 
 const title = computed(() => {
-  const { label, gender } = props.type
-    ? TAXONOMY_METADATA[props.type]
-    : { label: 'Registro', gender: 'm' }
-
-  if (props.action === 'create') {
-    return gender === 'f' ? `Nueva ${label}` : `Nuevo ${label}`
+  if (props.item) {
+    return `Editar ${props.label}`
   }
 
-  return `Editar ${label}`
+  return `Nuevo ${props.label}`
 })
 
-const actionText = computed(() => (props.action === 'create' ? 'Guardar' : 'Actualizar'))
+const actionText = computed(() => (props.item ? 'Actualizar' : 'Guardar'))
 </script>
 
 <template>
   <v-dialog v-model="isOpen" max-width="500px">
-    <v-card>
+    <v-card class="pa-4 rounded-lg">
       <v-card-title class="headline">{{ title }}</v-card-title>
+      <v-card-subtitle>LLene los campos del formulario para añadir.</v-card-subtitle>
       <v-card-text>
         <slot name="form" />
       </v-card-text>

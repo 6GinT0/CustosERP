@@ -1,7 +1,7 @@
 <script setup lang="ts">
 defineProps<{
   label: string
-  item: any | null
+  items: number[]
 }>()
 
 const isOpen = defineModel<boolean>('isDialogOpen')
@@ -17,10 +17,8 @@ const emits = defineEmits(['cancel', 'confirm'])
       </v-card-title>
 
       <v-card-text class="pt-4 px-6 text-body-1">
-        ¿Estás seguro de que deseas eliminar este registro?
-        <div v-if="item?.name" class="mt-2 pa-3 bg-grey-lighten-4 rounded font-weight-medium">
-          {{ item.name }}
-        </div>
+        ¿Estás seguro de que deseas eliminar los
+        <span class="font-weight-bold text-error">{{ items.length }}</span> registros seleccionados?
         <p class="text-caption text-medium-emphasis mt-4">
           Esta acción es permanente y no se puede deshacer.
         </p>

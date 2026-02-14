@@ -12,6 +12,7 @@ import type { Taxonomy } from '@/types/Taxonomy'
 import TaxonomyDataTable from '@/components/taxonomies/TaxonomyDataTable.vue'
 import TaxonomyFormDialog from '@/components/taxonomies/TaxonomyFormDialog.vue'
 import TaxonomyConfirmDialog from '@/components/taxonomies/TaxonomyConfirmDialog.vue'
+import TaxonomyConfirmBulkDialog from '@/components/taxonomies/TaxonomyConfirmBulkDialog.vue'
 import AppInput from '@/components/AppInput.vue'
 import AppSelect from '@/components/AppSelect.vue'
 
@@ -48,34 +49,30 @@ const taxonomyHeaders = [
 ]
 
 const onSave = handleSubmit(async (values) => {
-  if (action.value === 'create') {
-    await handleCreate(() => taxonomyService.create(values as any), 'Registro creado con éxito')
-  } else {
-    if (!selectedItem.value) return
-
+  if (selectedItem.value) {
     await handleUpdate(
       () => taxonomyService.update({ ...selectedItem.value!, ...values } as any),
       'Registro actualizado con éxito',
     )
+  } else {
+    await handleCreate(() => taxonomyService.create(values as any), 'Registro creado con éxito')
   }
 })
 
 const onConfirmDelete = async () => {
-  if (action.value === 'remove' && selectedItem.value) {
-    await handleDelete(
-      selectedItem.value.id,
-      () => taxonomyService.delete(selectedItem.value!.id),
-      'Registro eliminado correctamente',
-    )
-  } else if (action.value === 'removeMany') {
-    const ids = selected.value
+  await handleDelete(
+    selectedItem.value.id,
+    () => taxonomyService.delete(selectedItem.value!.id),
+    'Registro eliminado correctamente',
+  )
+}
 
-    await handleDeleteMany(
-      ids,
-      () => taxonomyService.deleteMany(ids),
-      'Registros eliminados correctamente',
-    )
-  }
+const onConfirmDeleteMany = async () => {
+  await handleDeleteMany(
+    selected.value,
+    () => taxonomyService.deleteMany(selected.value),
+    'Registros eliminados correctamente',
+  )
 }
 
 watch(selectedItem, (newItem) => {
@@ -116,7 +113,7 @@ watch(selectedItem, (newItem) => {
     <TaxonomyFormDialog
       v-if="action === 'create' || action === 'edit'"
       v-model:is-dialog-open="isDialogOpen"
-      :action="action"
+      label="Registro"
       :item="selectedItem"
       @cancel="cancel"
       @confirm="onSave"
@@ -135,14 +132,21 @@ watch(selectedItem, (newItem) => {
     </TaxonomyFormDialog>
 
     <TaxonomyConfirmDialog
-      v-else
+      v-if="action === 'remove'"
       v-model:is-dialog-open="isDialogOpen"
-      :label="action === 'remove' ? 'registro' : 'registros'"
-      :action="action"
+      label="Registro"
       :item="selectedItem"
-      :items="selected"
       @cancel="cancel"
       @confirm="onConfirmDelete"
+    />
+
+    <TaxonomyConfirmBulkDialog
+      v-if="action === 'removeMany'"
+      v-model:is-dialog-open="isDialogOpen"
+      label="Registro"
+      :items="selected"
+      @cancel="cancel"
+      @confirm="onConfirmDeleteMany"
     />
   </v-container>
 </template>
