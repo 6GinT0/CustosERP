@@ -1,0 +1,14 @@
+{
+  "contextFIleName": "AGENTS.md",
+  "context": {
+    "files": ["AGENTS.md"],
+    "directories": [".agent/rules", ".agent/skills"],
+    "priority": "high"
+  },
+  "tools": {
+    "path": ".agent/skills",
+    "auto_discover": true
+  },
+
+  "system_instruction": "Act according to the rules defined in .agent/rules/ and consult AGENTS.md for the project context."
+}
