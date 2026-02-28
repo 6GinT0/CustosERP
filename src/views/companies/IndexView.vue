@@ -1,0 +1,1 @@
+<template>Index companies</template>
