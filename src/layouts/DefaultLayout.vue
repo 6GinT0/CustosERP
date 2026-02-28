@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { title } from 'process'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -24,6 +25,16 @@ const navItems: NavItem[] = [
     title: 'Inspecciones',
     icon: 'mdi-clipboard-list-outline',
     to: '/inspections',
+  },
+  {
+    title: 'Empresas',
+    icon: 'mdi-office-building-outline',
+    to: '/companies',
+  },
+  {
+    title: 'Profesionales',
+    icon: 'mdi-account-outline',
+    to: '/professionals',
   },
   {
     title: 'Categorías',

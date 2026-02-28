@@ -3,25 +3,24 @@ import { useField } from 'vee-validate'
 
 const props = defineProps<{
   name: string
-  type: string
   label: string
   placeholder?: string
-  initialValue?: string
 }>()
 
 const { value, errorMessage } = useField(props.name, undefined, {
-  initialValue: props.initialValue || undefined,
+  initialValue: new Date(),
 })
 </script>
 
 <template>
-  <v-text-field
+  <v-date-input
     v-model="value"
     :label="label"
-    :type="type"
     :placeholder="placeholder"
+    prepend-icon=""
+    prepend-inner-icon="$calendar"
     persistent-placeholder
     :error-messages="errorMessage"
     variant="outlined"
-  />
+  ></v-date-input>
 </template>

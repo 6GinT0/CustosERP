@@ -4,6 +4,7 @@ import { useDatabase } from '../useDatabase'
 import { taxonomyService } from '@/services/TaxonomyService'
 import { categoryService } from '@/services/CategoryService'
 import { categoryItemService } from '@/services/CategoryItemService'
+import { companyService } from '@/services/CompanyService'
 
 vi.mock('@/services/TaxonomyService', () => ({
   taxonomyService: {
@@ -23,6 +24,12 @@ vi.mock('@/services/CategoryItemService', () => ({
   },
 }))
 
+vi.mock('@/services/CompanyService', () => ({
+  companyService: {
+    getAll: vi.fn(),
+  },
+}))
+
 describe('useDatabase', () => {
   const db = useDatabase()
 
@@ -31,6 +38,7 @@ describe('useDatabase', () => {
     db.taxonomies.value = []
     db.categories.value = []
     db.categoryItems.value = []
+    db.companies.value = []
     db.isLoading.value = false
   })
 
@@ -38,16 +46,19 @@ describe('useDatabase', () => {
     const mockTax = [{ id: 1, name: 'Tax 1', type: 'AREA' }]
     const mockCat = [{ id: 1, name: 'Cat 1', description: '' }]
     const mockItems = [{ id: 1, categoryId: 1, name: 'Item 1' }]
+    const mockCompanies = [{ id: 1, fantasyName: 'Company 1' }]
 
     vi.mocked(taxonomyService.getAll).mockResolvedValue(mockTax as any)
     vi.mocked(categoryService.getAll).mockResolvedValue(mockCat as any)
     vi.mocked(categoryItemService.getAll).mockResolvedValue(mockItems as any)
+    vi.mocked(companyService.getAll).mockResolvedValue(mockCompanies as any)
 
     await db.loadInitialData()
 
     expect(db.taxonomies.value).toEqual(mockTax)
     expect(db.categories.value).toEqual(mockCat)
     expect(db.categoryItems.value).toEqual(mockItems)
+    expect(db.companies.value).toEqual(mockCompanies)
     expect(db.isLoading.value).toBe(false)
   })
 

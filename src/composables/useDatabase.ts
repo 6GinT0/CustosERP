@@ -3,28 +3,33 @@ import { createGlobalState } from '@vueuse/core'
 import type { Taxonomy } from '@/types/Taxonomy'
 import type { Category } from '@/types/Category'
 import type { CategoryItem } from '@/types/CategoryItem'
+import type { Company } from '@/types/Company'
 import { taxonomyService } from '@/services/TaxonomyService'
 import { categoryService } from '@/services/CategoryService'
 import { categoryItemService } from '@/services/CategoryItemService'
+import { companyService } from '@/services/CompanyService'
 
 export const useDatabase = createGlobalState(() => {
   const isLoading: Ref<boolean> = ref(false)
   const taxonomies: Ref<Taxonomy[]> = ref([])
   const categories: Ref<Category[]> = ref([])
   const categoryItems: Ref<CategoryItem[]> = ref([])
+  const companies: Ref<Company[]> = ref([])
 
   async function loadInitialData() {
     isLoading.value = true
 
-    const [taxResult, catResult, itemResult] = await Promise.all([
+    const [taxResult, catResult, itemResult, companyResult] = await Promise.all([
       taxonomyService.getAll(),
       categoryService.getAll(),
       categoryItemService.getAll(),
+      companyService.getAll(),
     ])
 
     taxonomies.value = taxResult
     categories.value = catResult
     categoryItems.value = itemResult
+    companies.value = companyResult
 
     isLoading.value = false
   }
@@ -54,6 +59,7 @@ export const useDatabase = createGlobalState(() => {
     taxonomies,
     categories,
     categoryItems,
+    companies,
     loadInitialData,
     addItem,
     updateItem,

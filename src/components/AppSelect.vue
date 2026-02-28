@@ -25,5 +25,9 @@ const { value, errorMessage, handleChange, handleBlur } = useField(props.name, (
     :error-messages="errorMessage"
     @change="handleChange"
     @blur="handleBlur"
-  />
+  >
+    <template v-for="(_, name) in $slots" #[name]="slotData">
+      <slot :name="name" v-bind="slotData || {}" />
+    </template>
+  </v-select>
 </template>

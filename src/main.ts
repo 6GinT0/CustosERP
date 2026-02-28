@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import './App.css'
+import 'leaflet/dist/leaflet.css'
 import App from './App.vue'
 // Vuetify
 import { vuetify } from './config/vuetify'

@@ -8,7 +8,7 @@ pub const MIGRATION_1: Migration = Migration {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             cuit TEXT UNIQUE NOT NULL,
             social_reason TEXT,
-            social_number TEXT,
+            social_number INTEGER,
             fantasy_name TEXT,
             address TEXT,
             latitude REAL,
