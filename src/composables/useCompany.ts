@@ -35,8 +35,12 @@ export const useCompany = () => {
       router.push('/companies')
 
       messages.addMessageToQueue('Empresa creada correctamente', 'success')
-    } catch (e) {
-      messages.addMessageToQueue('Error al crear la empresa', 'error')
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        messages.addMessageToQueue(e.message, 'error')
+      } else {
+        messages.addMessageToQueue('Error al crear la empresa', 'error')
+      }
     }
   })
 
@@ -49,8 +53,12 @@ export const useCompany = () => {
       router.push('/companies')
 
       messages.addMessageToQueue('Empresa actualizada correctamente', 'success')
-    } catch (e) {
-      messages.addMessageToQueue('Error al actualizar la empresa', 'error')
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        messages.addMessageToQueue(e.message, 'error')
+      } else {
+        messages.addMessageToQueue('Error al actualizar la empresa', 'error')
+      }
     }
   })
 
@@ -61,8 +69,12 @@ export const useCompany = () => {
       removeItem(companies, id)
 
       messages.addMessageToQueue('Empresa eliminada correctamente', 'success')
-    } catch (e) {
-      messages.addMessageToQueue('Error al eliminar la empresa', 'error')
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        messages.addMessageToQueue(e.message, 'error')
+      } else {
+        messages.addMessageToQueue('Error al eliminar la empresa', 'error')
+      }
     }
   }
 
@@ -73,8 +85,12 @@ export const useCompany = () => {
       removeItems(companies, ids)
 
       messages.addMessageToQueue('Empresas eliminadas correctamente', 'success')
-    } catch (e) {
-      messages.addMessageToQueue('Error al eliminar las empresas', 'error')
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        messages.addMessageToQueue(e.message, 'error')
+      } else {
+        messages.addMessageToQueue('Error al eliminar las empresas', 'error')
+      }
     }
   }
 

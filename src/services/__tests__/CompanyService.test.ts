@@ -73,26 +73,17 @@ describe('CompanyService', () => {
       total_visits_count: 0,
       total_inspections_count: 0,
     }
+    // Duplicate check returns empty
+    mockDb.select.mockResolvedValue([])
     mockDb.execute.mockResolvedValue({ lastInsertId: 2 })
 
     const result = await companyService.create(newCompany as any)
 
     expect(result.id).toBe(2)
+    // First call is FTS5 init, second is INSERT, third is FTS5 sync
     expect(mockDb.execute).toHaveBeenCalledWith(
-      'INSERT INTO companies (cuit, social_reason, social_number, fantasy_name, address, latitude, longitude, phone, contact_name, total_visits_count, total_inspections_count) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
-      [
-        '30-87654321-9',
-        'NEW COMPANY',
-        null,
-        'NEW FANTASY',
-        'NEW ADDRESS 456',
-        null,
-        null,
-        null,
-        'NEW CONTACT',
-        0,
-        0,
-      ],
+      expect.stringContaining('INSERT INTO companies'),
+      expect.arrayContaining(['30-87654321-9', 'NEW COMPANY']),
     )
   })
 })

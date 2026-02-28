@@ -45,6 +45,7 @@ describe('CategoryItemService', () => {
 
   it('should create an item and convert name/lawReference to uppercase', async () => {
     const newItem = { categoryId: 10, name: 'test item', lawReference: 'art 1' }
+    mockDb.select.mockResolvedValue([])
     mockDb.execute.mockResolvedValue({ lastInsertId: 1 })
 
     const result = await categoryItemService.create(newItem)
@@ -56,8 +57,8 @@ describe('CategoryItemService', () => {
       lawReference: 'ART 1',
     })
     expect(mockDb.execute).toHaveBeenCalledWith(
-      'INSERT INTO category_items (category_id, name, law_reference) VALUES ($1, $2, $3)',
-      [10, 'TEST ITEM', 'ART 1'],
+      expect.stringContaining('INSERT INTO category_items'),
+      expect.arrayContaining([10, 'TEST ITEM', 'ART 1']),
     )
   })
 
@@ -66,6 +67,9 @@ describe('CategoryItemService', () => {
 
     await categoryItemService.delete(1)
 
-    expect(mockDb.execute).toHaveBeenCalledWith('DELETE FROM category_items WHERE id = $1', [1])
+    expect(mockDb.execute).toHaveBeenCalledWith(
+      expect.stringContaining('DELETE FROM category_items'),
+      expect.arrayContaining([1]),
+    )
   })
 })

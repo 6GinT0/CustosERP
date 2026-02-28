@@ -19,7 +19,26 @@ class TaxonomyService {
   }
 
   private async getDb() {
-    return await Database.load(this.dbPath)
+    const db = await Database.load(this.dbPath)
+
+    await db.execute(`
+      CREATE VIRTUAL TABLE IF NOT EXISTS taxonomies_fts USING fts5(
+        name, 
+        content='taxonomies', 
+        content_rowid='id'
+      )
+    `)
+
+    return db
+  }
+
+  async search(query: string): Promise<Taxonomy[]> {
+    const db = await this.getDb()
+    const result = await db.select<Taxonomy[]>(
+      'SELECT t.* FROM taxonomies t JOIN taxonomies_fts f ON t.id = f.rowid WHERE taxonomies_fts MATCH $1 ORDER BY rank',
+      [query],
+    )
+    return result
   }
 
   async getAll(): Promise<Taxonomy[]> {
@@ -33,30 +52,65 @@ class TaxonomyService {
   async create(taxonomy: Omit<Taxonomy, 'id'>): Promise<Taxonomy> {
     const db = await this.getDb()
 
+    const nameUpper = taxonomy.name.toUpperCase()
+
+    const exists = await db.select<any[]>(
+      'SELECT id FROM taxonomies WHERE name = $1 AND type = $2',
+      [nameUpper, taxonomy.type],
+    )
+
+    if (exists.length > 0) {
+      throw new Error(
+        `YA EXISTE UNA TAXONOMÍA DE TIPO "${taxonomy.type}" CON EL NOMBRE "${nameUpper}"`,
+      )
+    }
+
     const result = await db.execute('INSERT INTO taxonomies (name, type) VALUES ($1, $2)', [
-      taxonomy.name.toUpperCase(),
+      nameUpper,
       taxonomy.type,
     ])
 
+    const newId = result.lastInsertId as number
+
+    await db.execute('INSERT INTO taxonomies_fts (rowid, name) VALUES ($1, $2)', [newId, nameUpper])
+
     return {
       ...taxonomy,
-      name: taxonomy.name.toUpperCase(),
-      id: result.lastInsertId as number,
+      name: nameUpper,
+      id: newId,
     }
   }
 
   async update(taxonomy: Taxonomy): Promise<Taxonomy> {
     const db = await this.getDb()
 
+    const nameUpper = taxonomy.name.toUpperCase()
+
+    const exists = await db.select<any[]>(
+      'SELECT id FROM taxonomies WHERE name = $1 AND type = $2 AND id != $3',
+      [nameUpper, taxonomy.type, taxonomy.id],
+    )
+
+    if (exists.length > 0) {
+      throw new Error(
+        `YA EXISTE OTRA TAXONOMÍA DE TIPO "${taxonomy.type}" CON EL NOMBRE "${nameUpper}"`,
+      )
+    }
+
     await db.execute('UPDATE taxonomies SET name = $1, type = $2 WHERE id = $3', [
-      taxonomy.name.toUpperCase(),
+      nameUpper,
       taxonomy.type,
       taxonomy.id,
     ])
 
+    await db.execute('INSERT OR REPLACE INTO taxonomies_fts (rowid, name) VALUES ($1, $2)', [
+      taxonomy.id,
+      nameUpper,
+    ])
+
     return {
       ...taxonomy,
-      name: taxonomy.name.toUpperCase(),
+      name: nameUpper,
     }
   }
 
@@ -64,6 +118,7 @@ class TaxonomyService {
     const db = await this.getDb()
 
     await db.execute('DELETE FROM taxonomies WHERE id = $1', [id])
+    await db.execute('DELETE FROM taxonomies_fts WHERE rowid = $1', [id])
   }
 
   async deleteMany(ids: number[]): Promise<void> {
@@ -74,8 +129,10 @@ class TaxonomyService {
     const placeholders = ids.map((_, i) => `$${i + 1}`).join(', ')
 
     const query = `DELETE FROM taxonomies WHERE id IN (${placeholders})`
+    const ftsQuery = `DELETE FROM taxonomies_fts WHERE rowid IN (${placeholders})`
 
     await db.execute(query, ids)
+    await db.execute(ftsQuery, ids)
   }
 }
 

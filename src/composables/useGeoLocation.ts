@@ -27,8 +27,12 @@ export function useGeoLocation() {
       messages.addMessageToQueue('Dirección no encontrada', 'warning')
 
       return null
-    } catch (error) {
-      messages.addMessageToQueue('Error al obtener la ubicación', 'error')
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        messages.addMessageToQueue(e.message, 'error')
+      } else {
+        messages.addMessageToQueue('Error al obtener la ubicación', 'error')
+      }
 
       return null
     }

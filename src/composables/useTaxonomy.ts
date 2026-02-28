@@ -59,8 +59,12 @@ export const useTaxonomy = <T extends { id: number }>(list: Ref<T[]>) => {
       addMessageToQueue(msg, 'success')
 
       closeDialog()
-    } catch (e: any) {
-      addMessageToQueue(e.message || 'Error al procesar la solicitud', 'error')
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        addMessageToQueue(e.message, 'error')
+      } else {
+        addMessageToQueue('Error al procesar la solicitud', 'error')
+      }
     }
   }
 

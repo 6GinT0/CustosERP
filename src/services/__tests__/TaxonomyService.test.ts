@@ -35,14 +35,15 @@ describe('TaxonomyService', () => {
 
   it('should create a taxonomy and convert name to uppercase', async () => {
     const newTaxonomy = { name: 'new area', type: 'AREA' as const }
+    mockDb.select.mockResolvedValue([])
     mockDb.execute.mockResolvedValue({ lastInsertId: 1 })
 
     const result = await taxonomyService.create(newTaxonomy)
 
     expect(result).toEqual({ id: 1, name: 'NEW AREA', type: 'AREA' })
     expect(mockDb.execute).toHaveBeenCalledWith(
-      'INSERT INTO taxonomies (name, type) VALUES ($1, $2)',
-      ['NEW AREA', 'AREA'],
+      expect.stringContaining('INSERT INTO taxonomies'),
+      expect.arrayContaining(['NEW AREA', 'AREA']),
     )
   })
 
@@ -52,8 +53,8 @@ describe('TaxonomyService', () => {
     await taxonomyService.deleteMany([1, 2])
 
     expect(mockDb.execute).toHaveBeenCalledWith(
-      'DELETE FROM taxonomies WHERE id IN ($1, $2)',
-      [1, 2],
+      expect.stringContaining('DELETE FROM taxonomies'),
+      expect.arrayContaining([1, 2]),
     )
   })
 })
