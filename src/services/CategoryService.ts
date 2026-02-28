@@ -25,7 +25,8 @@ class CategoryService {
       CREATE VIRTUAL TABLE IF NOT EXISTS categories_fts USING fts5(
         name, 
         content='categories', 
-        content_rowid='id'
+        content_rowid='id',
+        tokenize="unicode61 remove_diacritics 1"
       )
     `)
 

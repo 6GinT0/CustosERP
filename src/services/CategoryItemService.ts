@@ -26,7 +26,8 @@ class CategoryItemService {
         name, 
         law_reference,
         content='category_items', 
-        content_rowid='id'
+        content_rowid='id',
+        tokenize="unicode61 remove_diacritics 1"
       )
     `)
 

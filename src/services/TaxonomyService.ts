@@ -25,7 +25,8 @@ class TaxonomyService {
       CREATE VIRTUAL TABLE IF NOT EXISTS taxonomies_fts USING fts5(
         name, 
         content='taxonomies', 
-        content_rowid='id'
+        content_rowid='id',
+        tokenize="unicode61 remove_diacritics 1"
       )
     `)
 
