@@ -136,10 +136,10 @@ class CompanyService {
     }
   }
 
-  async update(id: number, company: Company): Promise<Company> {
+  async update(id: number, company: CSchema): Promise<Company> {
     const db = await this.getDb()
 
-    const fantasyNameUpper = company.fantasyName?.toUpperCase() || ''
+    const fantasyNameUpper = company.fantasy_name?.toUpperCase() || ''
 
     const cuitExists = await db.select<any[]>(
       'SELECT id FROM companies WHERE cuit = $1 AND id != $2',
@@ -150,43 +150,49 @@ class CompanyService {
     }
 
     const nameExists = await db.select<any[]>(
-      'SELECT id FROM companies WHERE fantasy_name = $1 AND id != $2',
-      [fantasyNameUpper, id],
+      'SELECT rowid FROM companies_fts WHERE companies_fts MATCH $1 AND rowid != $2',
+      [`fantasy_name:"${fantasyNameUpper}"`, id],
     )
     if (nameExists.length > 0) {
       throw new Error('EL NOMBRE DE FANTASÍA YA SE ENCUENTRA REGISTRADO EN OTRA EMPRESA')
     }
 
     await db.execute(
-      'UPDATE companies SET cuit = $1, social_reason = $2, social_number = $3, fantasy_name = $4, address = $5, latitude = $6, longitude = $7, phone = $8, contact_name = $9 WHERE id = $10',
+      'UPDATE companies SET cuit = $1, social_reason = $2, social_number = $3, fantasy_name = $4, address = $5, latitude = $6, longitude = $7, phone = $8, contact_name = $9, total_visits_count = $10, total_inspections_count = $11 WHERE id = $12',
       [
         company.cuit,
-        company.socialReason?.toUpperCase() || null,
-        company.socialNumber || null,
+        company.social_reason?.toUpperCase() || null,
+        company.social_number || null,
         fantasyNameUpper,
         company.address?.toUpperCase() || null,
         company.latitude || null,
         company.longitude || null,
         company.phone || null,
-        company.contactName?.toUpperCase() || null,
+        company.contact_name?.toUpperCase() || null,
+        company.total_visits_count || 0,
+        company.total_inspections_count || 0,
         id,
       ],
     )
 
     await db.execute(
       'INSERT OR REPLACE INTO companies_fts (rowid, fantasy_name, social_reason) VALUES ($1, $2, $3)',
-      [id, fantasyNameUpper, company.socialReason?.toUpperCase() || ''],
+      [id, fantasyNameUpper, company.social_reason?.toUpperCase() || ''],
     )
 
     return {
-      ...company,
       id,
-      socialReason: company.socialReason?.toUpperCase() || undefined,
+      cuit: company.cuit,
+      socialReason: company.social_reason?.toUpperCase() || undefined,
+      socialNumber: company.social_number ?? undefined,
       fantasyName: fantasyNameUpper,
       address: company.address?.toUpperCase(),
-      contactName: company.contactName?.toUpperCase() || undefined,
+      latitude: company.latitude,
+      longitude: company.longitude,
       phone: company.phone ?? undefined,
-      socialNumber: company.socialNumber ?? undefined,
+      contactName: company.contact_name?.toUpperCase() || undefined,
+      totalVisitsCount: company.total_visits_count,
+      totalInspectionsCount: company.total_inspections_count,
     }
   }
 

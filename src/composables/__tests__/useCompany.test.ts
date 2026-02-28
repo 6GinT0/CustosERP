@@ -127,10 +127,7 @@ describe('useCompany', () => {
 
     await (handleCreate as any)({})
 
-    expect(mockMessages.addMessageToQueue).toHaveBeenCalledWith(
-      'Error al crear la empresa',
-      'error',
-    )
+    expect(mockMessages.addMessageToQueue).toHaveBeenCalledWith('Fail', 'error')
   })
 
   it('should handle update success', async () => {

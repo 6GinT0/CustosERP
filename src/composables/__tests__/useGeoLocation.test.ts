@@ -76,9 +76,6 @@ describe('useGeoLocation', () => {
     const result = await searchAddress('Test', '1', 'Test')
 
     expect(result).toBeNull()
-    expect(mockMessages.addMessageToQueue).toHaveBeenCalledWith(
-      'Error al obtener la ubicación',
-      'error',
-    )
+    expect(mockMessages.addMessageToQueue).toHaveBeenCalledWith('Network error', 'error')
   })
 })

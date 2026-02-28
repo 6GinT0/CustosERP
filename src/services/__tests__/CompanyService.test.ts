@@ -86,4 +86,33 @@ describe('CompanyService', () => {
       expect.arrayContaining(['30-87654321-9', 'NEW COMPANY']),
     )
   })
+
+  it('should update a company', async () => {
+    const updateData = {
+      cuit: '30-87654321-9',
+      social_reason: 'updated company',
+      fantasy_name: 'updated fantasy',
+      address: 'updated address 456',
+      contact_name: 'updated contact',
+      total_visits_count: 5,
+      total_inspections_count: 2,
+    }
+
+    mockDb.select.mockResolvedValue([]) // No duplicates
+    mockDb.execute.mockResolvedValue({ lastInsertId: 1 })
+
+    const result = await companyService.update(1, updateData as any)
+
+    expect(result.id).toBe(1)
+    expect(result.totalVisitsCount).toBe(5)
+    expect(result.fantasyName).toBe('UPDATED FANTASY')
+    expect(mockDb.execute).toHaveBeenCalledWith(
+      expect.stringContaining('UPDATE companies SET'),
+      expect.arrayContaining(['30-87654321-9', 'UPDATED COMPANY', 1]),
+    )
+    expect(mockDb.execute).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT OR REPLACE INTO companies_fts'),
+      expect.arrayContaining([1, 'UPDATED FANTASY', 'UPDATED COMPANY']),
+    )
+  })
 })
