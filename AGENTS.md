@@ -40,6 +40,7 @@ Delegate specific tasks based on the working directory:
 
 1. **Modularity:** If logic is complex and does not require a UI, move it to Rust (`src-tauri`). If it is purely visual, keep it in Vue (`src`).
 2. **Security:** Never expose direct SQL queries to the frontend; use Tauri Commands.
+3. **Testing:** After implementing each specification (spec), the corresponding test must be executed to verify correctness. Every specification must have at least one associated test.
 
 ## 6. Interaction Rules
 
