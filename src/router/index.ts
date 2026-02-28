@@ -29,9 +29,12 @@ const routes = [
   },
   {
     path: '/companies',
-    name: 'Companies',
-    component: () => import('@/views/companies/IndexView.vue'),
     children: [
+      {
+        path: '',
+        name: 'Companies',
+        component: () => import('@/views/companies/IndexView.vue'),
+      },
       {
         path: 'add',
         name: 'AddCompany',
@@ -46,9 +49,12 @@ const routes = [
   },
   {
     path: '/professionals',
-    name: 'Professionals',
-    component: () => import('@/views/professionals/IndexView.vue'),
     children: [
+      {
+        path: '',
+        name: 'Professionals',
+        component: () => import('@/views/professionals/IndexView.vue'),
+      },
       {
         path: 'add',
         name: 'AddProfessional',
