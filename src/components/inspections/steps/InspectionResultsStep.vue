@@ -12,7 +12,7 @@ const resultsRef = ref(
     name: el.name,
     apply: true,
     compliance: false,
-    status: InspectionStatus.OK,
+    status: InspectionStatus['No OK'],
   })),
 )
 
@@ -65,26 +65,23 @@ onMounted(() => {
 
     const results = props.initialValues.results
 
-    results.forEach((result: any) => {
+    results.forEach((result: { category_item_id: any; status: any }) => {
       const index = resultsRef.value.findIndex(
         (el) => el.category_item_id === result.category_item_id,
       )
 
       if (index !== -1) {
-        if (result.status === 0) {
-          resultsRef.value[index].apply = false
-          resultsRef.value[index].compliance = false
-          resultsRef.value[index].status = InspectionStatus['No OK']
-        } else if (result.status === 1) {
-          resultsRef.value[index].apply = true
-          resultsRef.value[index].compliance = false
-          resultsRef.value[index].status = InspectionStatus['N/A']
-        } else if (result.status === 2) {
-          resultsRef.value[index].apply = true
-          resultsRef.value[index].compliance = true
-          resultsRef.value[index].status = InspectionStatus.OK
-        }
+        resultsRef.value[index].status = result.status
+        resultsRef.value[index].apply = result.status !== InspectionStatus['N/A']
+        resultsRef.value[index].compliance = result.status === InspectionStatus.OK
       }
+    })
+
+    setValues({
+      results: resultsRef.value.map((el) => ({
+        category_item_id: el.category_item_id,
+        status: el.status,
+      })),
     })
   }
 })

@@ -2,8 +2,8 @@ import { z } from 'zod'
 
 export enum InspectionStatus {
   'N/A' = 0,
-  OK = 1,
-  'No OK' = 2,
+  'No OK' = 1,
+  OK = 2,
 }
 
 export const inspectionResultSchema = z.object({
