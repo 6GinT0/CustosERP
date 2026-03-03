@@ -140,7 +140,7 @@ export const useInspectionForm = (
             art: data.art,
             work_schedule: data.workSchedule,
             current_employee_count: data.currentEmployeeCount,
-            signature_customer_file: null,
+            signature_customer_file: undefined,
           },
           observations: {
             observations: data.observations,
