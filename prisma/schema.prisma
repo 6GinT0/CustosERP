@@ -1,0 +1,136 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Company {
+  id Int @id @default(autoincrement())
+  cuit String @unique
+  social_reason String?
+  social_number Int?
+  fantasy_name String @unique
+  address String
+  latitude Float
+  longitude Float
+  phone String?
+  contact_name String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  inspections Inspection[]
+
+  @@map("companies")
+}
+
+model Professional {
+  id Int @id @default(autoincrement())
+  fullname String
+  tuition_number String @unique
+  signature_path String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  inspections Inspection[]
+
+  @@map("professionals")
+}
+
+model Taxonomy {
+  id Int @id @default(autoincrement())
+  type TaxonomyType
+  name String
+  normalized_name String @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  areaInspections   Inspection[] @relation("AreaTaxonomy")
+  sectorInspections Inspection[] @relation("SectorTaxonomy")
+  reasonInspections Inspection[] @relation("ReasonTaxonomy")
+
+  @@map("taxonomies")
+}
+
+model Category {
+  id Int @id @default(autoincrement())
+  name String
+  normalized_name String @unique
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items CategoryItem[]
+
+  @@map("categories")
+}
+
+model CategoryItem {
+  id Int @id @default(autoincrement())
+  category_id Int
+  name String
+  normalized_name String @unique
+  law_reference String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  category Category @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+  inspectionResults InspectionResult[]
+
+  @@map("category_items")
+}
+
+model Inspection {
+  id Int @id @default(autoincrement())
+  date DateTime @default(now())
+  company_id Int
+  professional_id Int
+  area_id Int
+  sector_id Int
+  reason_id Int
+  art String
+  work_schedule String?
+  total_visits_count Int @default(0)
+  total_inspections_count Int @default(0)
+  current_employee_count Int?
+  observations String?
+  breach String?
+  signature_customer_path String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [company_id], references: [id])
+  professional Professional @relation(fields: [professional_id], references: [id])
+  area Taxonomy @relation("AreaTaxonomy", fields: [area_id], references: [id])
+  sector Taxonomy @relation("SectorTaxonomy", fields: [sector_id], references: [id])
+  reason Taxonomy @relation("ReasonTaxonomy", fields: [reason_id], references: [id])
+
+  results InspectionResult[]
+
+  @@map("inspections")
+}
+
+model InspectionResult {
+  id Int @id @default(autoincrement())
+  inspection_id Int
+  category_item_id Int
+  status String
+  item_snapshot String?
+
+  inspection    Inspection   @relation(fields: [inspection_id], references: [id], onDelete: Cascade)
+  category_item CategoryItem @relation(fields: [category_item_id], references: [id])
+
+  @@map("inspection_results")
+}
+
+enum TaxonomyType {
+  AREA
+  SECTOR
+  REASON
+}
