@@ -1,8 +1,9 @@
 import { ref, reactive, watch } from 'vue'
+import { createGlobalState } from '@vueuse/core'
 import { startOfDay, subDays } from 'date-fns'
 import type { DashboardFilters } from '#/src/preload/index.d'
 
-export const useFilters = () => {
+export const useFilters = createGlobalState(() => {
   const filters = reactive({
     dateRange: {
       start: subDays(new Date(), 30),
@@ -11,8 +12,6 @@ export const useFilters = () => {
     area: null as number | null,
     sector: null as number | null,
     reason: null as number | null,
-    category: [] as number[],
-    categoriesItems: [] as number[],
     company: null as number | null,
     professional: null as number | null
   })
@@ -67,9 +66,11 @@ export const useFilters = () => {
       totalInspections.value = stats.inspections
       totalVisits.value = stats.visits
 
-      const end = startOfDay(new Date())
-      const start = subDays(end, 30)
-      inspectionsData.value = await window.api.inspection.getInspectionsPerDay(start, end, f)
+      inspectionsData.value = await window.api.inspection.getInspectionsPerDay(
+        filters.dateRange.start,
+        filters.dateRange.end,
+        f
+      )
 
       distributionData.value = await window.api.inspection.getDistribution(f)
       compliancePerItemData.value = await window.api.inspection.getCompliancePerItem(f)
@@ -89,4 +90,4 @@ export const useFilters = () => {
     compliancePerItemData,
     recentInspections
   }
-}
+})

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useFilters } from './_composables/useFilters'
+import Filters from './_components/Filters.vue'
 import Card from './_components/Card.vue'
 import ChartInspection from './_components/ChartInspection.vue'
 import ChartDistribution from './_components/ChartDistribution.vue'
@@ -19,7 +20,7 @@ const {
   <v-container fluid>
     <v-row>
       <v-col class="d-flex justify-end ga-4">
-        <v-btn icon="mdi-filter" color="indigo-darken-3" variant="tonal" size="small"></v-btn>
+        <Filters />
         <v-divider inset vertical></v-divider>
         <v-btn
           variant="flat"

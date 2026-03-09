@@ -133,9 +133,16 @@ export class InspectionService {
   async getCompliancePercentage(filters?: DashboardFilters): Promise<number> {
     const where = buildWhere(filters)
 
-    const inspIds = (await this.prisma.inspection.findMany({ where, select: { id: true } })).map(
-      (i) => i.id
-    )
+    const inspections = await this.prisma.inspection.findMany({
+      where,
+      select: { id: true }
+    })
+
+    const inspIds = inspections.map((i) => i.id)
+
+    if (inspIds.length === 0) {
+      return 0
+    }
 
     const results = await this.prisma.inspectionResult.groupBy({
       by: ['status'],
@@ -201,9 +208,17 @@ export class InspectionService {
     filters?: DashboardFilters
   ): Promise<{ name: string; percentage: number; ok: number; noOk: number; na: number }[]> {
     const where = buildWhere(filters)
-    const inspIds = (await this.prisma.inspection.findMany({ where, select: { id: true } })).map(
-      (i) => i.id
-    )
+
+    const inspections = await this.prisma.inspection.findMany({
+      where,
+      select: { id: true }
+    })
+
+    const inspIds = inspections.map((i) => i.id)
+
+    if (inspIds.length === 0) {
+      return []
+    }
 
     const results = await this.prisma.inspectionResult.groupBy({
       by: ['category_item_id', 'status'],
