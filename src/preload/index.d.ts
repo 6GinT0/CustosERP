@@ -7,6 +7,16 @@ import { Professional } from '#/types/professional'
 import { Inspection } from '#/types/inspection'
 import { InspectionResult } from '#/types/inspection-result'
 
+export interface DashboardFilters {
+  dateStart?: Date | null
+  dateEnd?: Date | null
+  areaId?: number | null
+  sectorId?: number | null
+  reasonId?: number | null
+  companyId?: number | null
+  professionalId?: number | null
+}
+
 declare global {
   interface Window {
     electron: ElectronAPI
@@ -73,6 +83,36 @@ declare global {
         getAll: () => Promise<Inspection[]>
         getById: (id: number) => Promise<Inspection | null>
         getByCompany: (companyId: number) => Promise<Inspection[]>
+        getMostFrequentReason: (
+          filters?: DashboardFilters
+        ) => Promise<{ id: number; name: string } | null>
+        getTotalInspectionsAndVisits: (
+          filters?: DashboardFilters
+        ) => Promise<{ inspections: number; visits: number }>
+        getCompliancePercentage: (filters?: DashboardFilters) => Promise<number>
+        getInspectionsPerDay: (
+          startDate: Date,
+          endDate: Date,
+          filters?: DashboardFilters
+        ) => Promise<{ date: string; count: number }[]>
+        getDistribution: (filters?: DashboardFilters) => Promise<{
+          areas: { name: string; count: number }[]
+          sectors: { name: string; count: number }[]
+          reasons: { name: string; count: number }[]
+        }>
+        getCompliancePerItem: (
+          filters?: DashboardFilters
+        ) => Promise<{ name: string; percentage: number; ok: number; noOk: number; na: number }[]>
+        getRecentInspections: (filters?: DashboardFilters) => Promise<
+          {
+            id: number
+            date: string
+            company: string
+            compliance: string
+            visitNumber: number | string
+            inspectionNumber: number | string
+          }[]
+        >
         create: (data: any) => Promise<Inspection>
         update: (id: number, data: any) => Promise<Inspection>
         delete: (id: number) => Promise<void>

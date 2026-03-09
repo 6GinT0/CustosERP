@@ -2,6 +2,7 @@ import { contextBridge } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
 import { ipcRenderer } from 'electron'
+import type { DashboardFilters } from '../main/services/inspection.service'
 
 // Custom APIs for renderer
 const api = {
@@ -60,6 +61,20 @@ const api = {
     getAll: () => ipcRenderer.invoke('inspection:getAll'),
     getById: (id: number) => ipcRenderer.invoke('inspection:getById', id),
     getByCompany: (companyId: number) => ipcRenderer.invoke('inspection:getByCompany', companyId),
+    getMostFrequentReason: (filters?: DashboardFilters) =>
+      ipcRenderer.invoke('inspection:getMostFrequentReason', filters),
+    getTotalInspectionsAndVisits: (filters?: DashboardFilters) =>
+      ipcRenderer.invoke('inspection:getTotalInspectionsAndVisits', filters),
+    getCompliancePercentage: (filters?: DashboardFilters) =>
+      ipcRenderer.invoke('inspection:getCompliancePercentage', filters),
+    getInspectionsPerDay: (startDate: Date, endDate: Date, filters?: DashboardFilters) =>
+      ipcRenderer.invoke('inspection:getInspectionsPerDay', { startDate, endDate, filters }),
+    getDistribution: (filters?: DashboardFilters) =>
+      ipcRenderer.invoke('inspection:getDistribution', filters),
+    getCompliancePerItem: (filters?: DashboardFilters) =>
+      ipcRenderer.invoke('inspection:getCompliancePerItem', filters),
+    getRecentInspections: (filters?: DashboardFilters) =>
+      ipcRenderer.invoke('inspection:getRecentInspections', filters),
     create: (data: any) => ipcRenderer.invoke('inspection:create', data),
     update: (id: number, data: any) => ipcRenderer.invoke('inspection:update', { id, data }),
     delete: (id: number) => ipcRenderer.invoke('inspection:delete', id),

@@ -1,7 +1,37 @@
-import { PrismaClient, Inspection as PrismaInspection } from '#/generated/prisma/client'
+import { PrismaClient, Inspection as PrismaInspection, Prisma } from '#/generated/prisma/client'
 import { prisma } from '#/src/main/lib/prisma'
 import { storage } from '../lib/storage'
 import { inspectionResultService } from './inspection-result.service'
+
+export type DashboardFilters = {
+  dateStart?: Date | null
+  dateEnd?: Date | null
+  areaId?: number | null
+  sectorId?: number | null
+  reasonId?: number | null
+  companyId?: number | null
+  professionalId?: number | null
+}
+
+/**
+ * Builds a Prisma `where` clause from the provided dashboard filters.
+ * All filters are optional — omitted/null values are excluded.
+ */
+function buildWhere(f?: DashboardFilters): Prisma.InspectionWhereInput {
+  if (!f) return {}
+  const where: Prisma.InspectionWhereInput = {}
+  if (f.dateStart || f.dateEnd) {
+    where.date = {}
+    if (f.dateStart) (where.date as Prisma.DateTimeFilter).gte = f.dateStart
+    if (f.dateEnd) (where.date as Prisma.DateTimeFilter).lte = f.dateEnd
+  }
+  if (f.areaId) where.area_id = f.areaId
+  if (f.sectorId) where.sector_id = f.sectorId
+  if (f.reasonId) where.reason_id = f.reasonId
+  if (f.companyId) where.company_id = f.companyId
+  if (f.professionalId) where.professional_id = f.professionalId
+  return where
+}
 
 export class InspectionService {
   private static instance: InspectionService
@@ -60,6 +90,196 @@ export class InspectionService {
       },
       orderBy: {
         date: 'desc'
+      }
+    })
+  }
+
+  async getMostFrequentReason(
+    filters?: DashboardFilters
+  ): Promise<{ id: number; name: string } | null> {
+    const where = buildWhere(filters)
+    const result = await this.prisma.inspection.groupBy({
+      by: ['reason_id'],
+      where,
+      _count: { reason_id: true },
+      orderBy: { _count: { reason_id: 'desc' } },
+      take: 1
+    })
+
+    if (result.length > 0) {
+      return this.prisma.taxonomy.findUnique({ where: { id: result[0].reason_id } })
+    }
+
+    return null
+  }
+
+  async getTotalInspectionsAndVisits(
+    filters?: DashboardFilters
+  ): Promise<{ inspections: number; visits: number }> {
+    const where = buildWhere(filters)
+    const result = await this.prisma.inspection.aggregate({
+      where,
+      _sum: {
+        total_inspections_count: true,
+        total_visits_count: true
+      }
+    })
+    return {
+      inspections: result._sum.total_inspections_count || 0,
+      visits: result._sum.total_visits_count || 0
+    }
+  }
+
+  async getCompliancePercentage(filters?: DashboardFilters): Promise<number> {
+    const where = buildWhere(filters)
+
+    const inspIds = (await this.prisma.inspection.findMany({ where, select: { id: true } })).map(
+      (i) => i.id
+    )
+
+    const results = await this.prisma.inspectionResult.groupBy({
+      by: ['status'],
+      where: inspIds.length ? { inspection_id: { in: inspIds } } : undefined,
+      _count: { status: true }
+    })
+
+    let okCount = 0
+    let notOkCount = 0
+    for (const r of results) {
+      if (r.status === 'OK') okCount += r._count.status
+      else if (r.status === 'No OK') notOkCount += r._count.status
+    }
+
+    const totalApplicable = okCount + notOkCount
+    if (totalApplicable === 0) return 0
+    return Math.round((okCount / totalApplicable) * 100)
+  }
+
+  async getInspectionsPerDay(
+    startDate: Date,
+    endDate: Date,
+    filters?: DashboardFilters
+  ): Promise<{ date: string; count: number }[]> {
+    const where = buildWhere({ ...filters, dateStart: startDate, dateEnd: endDate })
+    const inspections = await this.prisma.inspection.findMany({ where, select: { date: true } })
+
+    const counts: Record<string, number> = {}
+    for (const insp of inspections) {
+      if (!insp.date) continue
+      const day = insp.date.toISOString().split('T')[0]
+      counts[day] = (counts[day] || 0) + 1
+    }
+    return Object.keys(counts).map((date) => ({ date, count: counts[date] }))
+  }
+
+  async getDistribution(filters?: DashboardFilters): Promise<{
+    areas: { name: string; count: number }[]
+    sectors: { name: string; count: number }[]
+    reasons: { name: string; count: number }[]
+  }> {
+    const where = buildWhere(filters)
+    const taxonomies = await this.prisma.taxonomy.findMany()
+    const tMap = new Map(taxonomies.map((t) => [t.id, t.name]))
+
+    const formatG = (g: { [key: string]: unknown; _count: Record<string, number> }[], k: string) =>
+      g.map((row) => ({ name: tMap.get(row[k] as number) || '?', count: row._count[k] }))
+
+    const [a, s, r] = await Promise.all([
+      this.prisma.inspection.groupBy({ by: ['area_id'], where, _count: { area_id: true } }),
+      this.prisma.inspection.groupBy({ by: ['sector_id'], where, _count: { sector_id: true } }),
+      this.prisma.inspection.groupBy({ by: ['reason_id'], where, _count: { reason_id: true } })
+    ])
+
+    return {
+      areas: formatG(a as Parameters<typeof formatG>[0], 'area_id'),
+      sectors: formatG(s as Parameters<typeof formatG>[0], 'sector_id'),
+      reasons: formatG(r as Parameters<typeof formatG>[0], 'reason_id')
+    }
+  }
+
+  async getCompliancePerItem(
+    filters?: DashboardFilters
+  ): Promise<{ name: string; percentage: number; ok: number; noOk: number; na: number }[]> {
+    const where = buildWhere(filters)
+    const inspIds = (await this.prisma.inspection.findMany({ where, select: { id: true } })).map(
+      (i) => i.id
+    )
+
+    const results = await this.prisma.inspectionResult.groupBy({
+      by: ['category_item_id', 'status'],
+      where: inspIds.length ? { inspection_id: { in: inspIds } } : undefined,
+      _count: { status: true }
+    })
+
+    const items = await this.prisma.categoryItem.findMany()
+    const itemMap = new Map(items.map((i) => [i.id, i.name]))
+
+    const statsMap: Record<number, { ok: number; noOk: number; na: number }> = {}
+    for (const r of results) {
+      if (!statsMap[r.category_item_id]) statsMap[r.category_item_id] = { ok: 0, noOk: 0, na: 0 }
+      if (r.status === 'OK') statsMap[r.category_item_id].ok += r._count.status
+      else if (r.status === 'No OK') statsMap[r.category_item_id].noOk += r._count.status
+      else if (r.status === 'N/A') statsMap[r.category_item_id].na += r._count.status
+    }
+
+    const payload = Object.keys(statsMap).map((idStr) => {
+      const id = parseInt(idStr)
+      const data = statsMap[id]
+      const totalApplicable = data.ok + data.noOk
+      const percentage = totalApplicable === 0 ? 0 : Math.round((data.ok / totalApplicable) * 100)
+      return {
+        name: itemMap.get(id) || `Item ${id}`,
+        percentage,
+        ok: data.ok,
+        noOk: data.noOk,
+        na: data.na
+      }
+    })
+
+    return payload.sort((a, b) => b.percentage - a.percentage)
+  }
+
+  async getRecentInspections(filters?: DashboardFilters): Promise<
+    {
+      id: number
+      date: string
+      company: string
+      compliance: string
+      visitNumber: number | string
+      inspectionNumber: number | string
+    }[]
+  > {
+    const where = buildWhere(filters)
+    const rows = await this.prisma.inspection.findMany({
+      where,
+      take: 8,
+      orderBy: { date: 'desc' },
+      include: {
+        company: { select: { fantasy_name: true, social_reason: true } },
+        results: { select: { status: true } }
+      }
+    })
+
+    return rows.map((i) => {
+      let okCount = 0
+      let totalApplicable = 0
+      for (const r of i.results) {
+        if (r.status === 'OK') {
+          okCount++
+          totalApplicable++
+        } else if (r.status === 'No OK') totalApplicable++
+      }
+      const compliance = totalApplicable > 0 ? Math.round((okCount / totalApplicable) * 100) : 0
+      const dateStr = i.date
+        ? `${String(i.date.getDate()).padStart(2, '0')}/${String(i.date.getMonth() + 1).padStart(2, '0')}/${i.date.getFullYear()}`
+        : 'S/F'
+      return {
+        id: i.id,
+        date: dateStr,
+        company: i.company?.fantasy_name || i.company?.social_reason || 'Desconocida',
+        compliance: `${compliance}%`,
+        visitNumber: i.total_visits_count || '-',
+        inspectionNumber: i.total_inspections_count || '-'
       }
     })
   }
@@ -174,11 +394,11 @@ export class InspectionService {
   }
 
   async deleteMany(ids: number[]): Promise<void> {
-    const inspections = await this.prisma.inspection.findMany({
+    const rows = await this.prisma.inspection.findMany({
       where: { id: { in: ids } }
     })
 
-    for (const inspection of inspections) {
+    for (const inspection of rows) {
       if (inspection.signature_customer_path) {
         storage.deleteFile(inspection.signature_customer_path)
       }
