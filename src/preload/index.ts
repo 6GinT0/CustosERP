@@ -87,6 +87,11 @@ const api = {
     create: (data: any) => ipcRenderer.invoke('inspectionResult:create', data),
     update: (id: number, data: any) => ipcRenderer.invoke('inspectionResult:update', { id, data }),
     delete: (id: number) => ipcRenderer.invoke('inspectionResult:delete', id)
+  },
+  pdf: {
+    save: (fileName: string, pdfData: number[]) =>
+      ipcRenderer.invoke('pdf:save', { fileName, pdfData }),
+    generate: (inspectionId: number) => ipcRenderer.invoke('pdf:generate', { inspectionId })
   }
 }
 

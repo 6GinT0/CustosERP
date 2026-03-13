@@ -56,6 +56,7 @@ import { registerCompanyHandlers } from './ipc/company.ipc'
 import { registerProfessionalHandlers } from './ipc/professional.ipc'
 import { registerInspectionHandlers } from './ipc/inspection.ipc'
 import { registerInspectionResultHandlers } from './ipc/inspection-result.ipc'
+import { registerPdfHandlers } from './ipc/pdf.ipc'
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -101,6 +102,7 @@ app.whenReady().then(() => {
   registerProfessionalHandlers()
   registerInspectionHandlers()
   registerInspectionResultHandlers()
+  registerPdfHandlers()
 
   createWindow()
 

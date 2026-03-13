@@ -74,7 +74,15 @@ export class InspectionService {
         area: true,
         sector: true,
         reason: true,
-        results: true
+        results: {
+          include: {
+            category_item: {
+              include: {
+                category: true
+              }
+            }
+          }
+        }
       }
     })
   }

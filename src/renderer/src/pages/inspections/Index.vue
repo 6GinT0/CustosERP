@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useDatabase } from '@renderer/composables/useDatabase'
 import { useInspectionDataTable } from './_composables/useInspectionDataTable'
+import { exportInspectionToPdf, isExportingPdf } from '@renderer/composables/usePdfExport'
+import { useMessages } from '@renderer/composables/useMessages'
 import ConfirmDeleteDialog from '@renderer/components/form/actions/ConfirmDeleteDialog.vue'
 import ConfirmBulkDialog from '@renderer/components/form/actions/ConfirmBulkDialog.vue'
 
@@ -18,6 +20,7 @@ const {
 } = useInspectionDataTable()
 
 const { companies, professionals, taxonomies } = useDatabase()
+const messages = useMessages()
 
 const tableHeaders = [
   { title: 'ID', key: 'id' },
@@ -47,8 +50,17 @@ function getTaxonomy(id: number) {
   return taxonomies.value.find((t) => t.id === id)!.name
 }
 
-function formatDate(dateStr: string) {
+function formatDate(dateStr: string | Date) {
   return new Date(dateStr).toLocaleDateString()
+}
+
+async function handleExportPdf(item: any) {
+  const result = await exportInspectionToPdf(item.id)
+  if (result.success) {
+    messages.addMessageToQueue('PDF guardado en descargas', 'success')
+  } else {
+    messages.addMessageToQueue(result.error || 'Error al exportar PDF', 'error')
+  }
 }
 </script>
 
@@ -153,23 +165,37 @@ function formatDate(dateStr: string) {
             </template>
 
             <template #item.actions="{ item }">
-              <div class="d-flex ga-2 justify-end">
-                <v-btn
-                  icon="mdi-pencil"
-                  size="small"
-                  color="medium-emphasis"
-                  variant="text"
-                  @click="$router.push('/inspections/edit/' + item.id)"
-                ></v-btn>
-
-                <v-btn
-                  icon="mdi-delete"
-                  size="small"
-                  color="medium-emphasis"
-                  variant="text"
-                  @click="openAction(item)"
-                ></v-btn>
-              </div>
+              <v-menu>
+                <template #activator="{ props }">
+                  <v-btn
+                    icon="mdi-dots-vertical"
+                    size="small"
+                    color="medium-emphasis"
+                    variant="text"
+                    v-bind="props"
+                  ></v-btn>
+                </template>
+                <v-list density="compact" nav>
+                  <v-list-item
+                    prepend-icon="mdi-pencil"
+                    title="Editar"
+                    @click="$router.push('/inspections/edit/' + item.id)"
+                  ></v-list-item>
+                  <v-list-item
+                    prepend-icon="mdi-delete"
+                    title="Eliminar"
+                    @click="openAction(item)"
+                  ></v-list-item>
+                  <v-divider class="my-1"></v-divider>
+                  <v-list-subheader>Exportar</v-list-subheader>
+                  <v-list-item
+                    prepend-icon="mdi-file-pdf-box"
+                    title="Exportar a PDF"
+                    :loading="isExportingPdf"
+                    @click="handleExportPdf(item)"
+                  ></v-list-item>
+                </v-list>
+              </v-menu>
             </template>
 
             <template #no-data> No hay inspecciones disponibles. </template>

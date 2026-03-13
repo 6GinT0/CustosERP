@@ -125,6 +125,15 @@ declare global {
         update: (id: number, data: any) => Promise<InspectionResult>
         delete: (id: number) => Promise<void>
       }
+      pdf: {
+        save: (
+          fileName: string,
+          pdfData: number[]
+        ) => Promise<{ success: boolean; filePath?: string; error?: string }>
+        generate: (
+          inspectionId: number
+        ) => Promise<{ success: boolean; filePath?: string; error?: string }>
+      }
     }
   }
 }
