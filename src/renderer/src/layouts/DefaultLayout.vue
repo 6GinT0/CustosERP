@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
+import icon from '#/resources/icon.png'
 
 const route = useRoute()
 
@@ -78,7 +79,7 @@ const isActiveTaxonomyGroup = (item: any) => {
           <v-list-item title="CustosERP">
             <template #prepend>
               <v-avatar size="32">
-                <v-img src="/logo.png" alt="CustosERP Logo" contain />
+                <v-img :src="icon" alt="CustosERP Logo" contain />
               </v-avatar>
             </template>
           </v-list-item>
