@@ -21,33 +21,37 @@ export const useDatabase = createGlobalState(() => {
   async function loadInitialData(): Promise<void> {
     isLoading.value = true
 
-    const [
-      taxResult,
-      catResult,
-      catItemsResult,
-      companiesResult,
-      professionalsResult,
-      inspResult,
-      inspResResult
-    ] = await Promise.all([
-      window.api.taxonomy.getAll(),
-      window.api.category.getAll(),
-      window.api.categoryItem.getAll(),
-      window.api.company.getAll(),
-      window.api.professional.getAll(),
-      window.api.inspection.getAll(),
-      window.api.inspectionResult.getAll()
-    ])
+    try {
+      const [
+        taxResult,
+        catResult,
+        catItemsResult,
+        companiesResult,
+        professionalsResult,
+        inspResult,
+        inspResResult
+      ] = await Promise.all([
+        window.api.taxonomy.getAll(),
+        window.api.category.getAll(),
+        window.api.categoryItem.getAll(),
+        window.api.company.getAll(),
+        window.api.professional.getAll(),
+        window.api.inspection.getAll(),
+        window.api.inspectionResult.getAll()
+      ])
 
-    taxonomies.value = taxResult
-    categories.value = catResult
-    categoryItems.value = catItemsResult
-    companies.value = companiesResult
-    professionals.value = professionalsResult
-    inspections.value = inspResult
-    inspectionsResults.value = inspResResult
-
-    isLoading.value = false
+      taxonomies.value = taxResult
+      categories.value = catResult
+      categoryItems.value = catItemsResult
+      companies.value = companiesResult
+      professionals.value = professionalsResult
+      inspections.value = inspResult
+      inspectionsResults.value = inspResResult
+    } catch (error) {
+      console.error('[DATABASE] Error al cargar los datos iniciales:', error)
+    } finally {
+      isLoading.value = false
+    }
   }
 
   function addItem<T>(list: Ref<T[]>, item: T): void {

@@ -3,11 +3,21 @@ import { taxonomyService } from '../services/taxonomy.service'
 
 export function registerTaxonomyHandlers(): void {
   ipcMain.handle('taxonomy:getAll', async () => {
-    return taxonomyService.getAll()
+    try {
+      return await taxonomyService.getAll()
+    } catch (error: any) {
+      console.error('[IPC] Error en taxonomy:getAll:', error.message)
+      throw error
+    }
   })
 
   ipcMain.handle('taxonomy:getByType', async (_event, type) => {
-    return taxonomyService.getByType(type)
+    try {
+      return await taxonomyService.getByType(type)
+    } catch (error: any) {
+      console.error(`[IPC] Error en taxonomy:getByType (${type}):`, error.message)
+      throw error
+    }
   })
 
   ipcMain.handle('taxonomy:create', async (_event, data) => {
