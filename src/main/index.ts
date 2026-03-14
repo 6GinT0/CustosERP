@@ -1,15 +1,51 @@
-import { app, shell, BrowserWindow, ipcMain, protocol, nativeImage } from 'electron'
+import 'dotenv/config'
+
+import { app, shell, BrowserWindow, ipcMain, protocol, nativeImage, dialog } from 'electron'
 import { join, resolve } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { runMigrations } from './config/autoMigration.config'
+import { initDatabase } from './config/db.config'
+import { initAutoUpdater } from './config/autoUpdater.config'
 
-// Register privileged schemes before app is ready
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = 'file:./dev.db'
+}
+
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app-data', privileges: { secure: true, standard: true, supportFetchAPI: true } }
 ])
 
+const isLock = app.requestSingleInstanceLock()
+
+if (!isLock) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    const windows = BrowserWindow.getAllWindows()
+    if (windows.length > 0) {
+      if (windows[0].isMinimized()) windows[0].restore()
+      windows[0].focus()
+    }
+  })
+}
+
+process.on('uncaughtException', (error) => {
+  console.error('[MAIN] Uncaught Exception:', error)
+  dialog.showErrorBox(
+    'Error Crítico en CustosERP',
+    `Ocurrió un error inesperado:\n${error.message}\n\nPor favor, contactá al desarrollador.`
+  )
+  app.quit()
+})
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[MAIN] Unhandled Rejection:', reason)
+})
+
 function createWindow(): void {
-  // Create the browser window.
+  console.log('[MAIN] Creando ventana...')
+
   const mainWindow = new BrowserWindow({
     minWidth: 900,
     minHeight: 670,
@@ -40,8 +76,6 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
@@ -58,19 +92,23 @@ import { registerInspectionHandlers } from './ipc/inspection.ipc'
 import { registerInspectionResultHandlers } from './ipc/inspection-result.ipc'
 import { registerPdfHandlers } from './ipc/pdf.ipc'
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
-  // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
+app.whenReady().then(async () => {
+  console.log('[MAIN] App ready, iniciando...')
 
-  // Register protocol to serve storage files
+  electronApp.setAppUserModelId('com.6gint0.custoserp')
+
+  console.log('[MAIN] Iniciando database...')
+  initDatabase()
+
+  console.log('[MAIN] Ejecutando migraciones...')
+  await runMigrations()
+
+  console.log('[MAIN] Iniciando autoUpdater...')
+  initAutoUpdater()
+
+  console.log('[MAIN] Registrando protocolo app-data...')
   protocol.registerFileProtocol('app-data', (request, callback) => {
-    // Decode and remove protocol prefix
     const rawPath = decodeURIComponent(request.url.replace(/^app-data:\/\//, ''))
-
-    // Normalize path separators for Windows/Unix compatibility
     const pathPart = rawPath.replace(/^\/+/, '').replace(/\\/g, '/')
 
     let baseDir: string
@@ -84,17 +122,14 @@ app.whenReady().then(() => {
     callback({ path: fullPath })
   })
 
-  // Default open or close DevTools by F12 in development
-  // and ignore CommandOrControl + R in production.
-  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
+  console.log('[MAIN] Configurando optimizador...')
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
-  // Registry Taxonomy Handlers
+  console.log('[MAIN] Registrando handlers IPC...')
   registerTaxonomyHandlers()
   registerCategoryHandlers()
   registerCategoryItemHandlers()
@@ -104,23 +139,17 @@ app.whenReady().then(() => {
   registerInspectionResultHandlers()
   registerPdfHandlers()
 
+  console.log('[MAIN] Creando ventana principal...')
   createWindow()
 
   app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
+  console.log('[MAIN] Todas las ventanas cerradas')
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.

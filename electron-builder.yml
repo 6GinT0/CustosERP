@@ -1,5 +1,5 @@
 appId: com.6gint0.custoserp
-productName: custoserp
+productName: CustosERP
 directories:
   buildResources: build
 files:
@@ -9,8 +9,23 @@ files:
   - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+extraResources:
+  - from: prisma/
+    to: prisma/
+    filter:
+      - '**/*'
+  - from: generated/prisma/
+    to: prisma/client/
+    filter:
+      - '**/*'
+  - from: node_modules/@prisma/engines/
+    to: prisma/engines/
+    filter:
+      - '**/*'
 asarUnpack:
   - resources/**
+  - generated/prisma/client/*.exe
+  - node_modules/@prisma/engines/*.exe
 win:
   executableName: CustosERP
 nsis:
@@ -41,4 +56,4 @@ npmRebuild: false
 publish:
   provider: github
   owner: 6GinT0
-  repo: https://github.com/6GinT0/CustosERP
+  repo: CustosERP
