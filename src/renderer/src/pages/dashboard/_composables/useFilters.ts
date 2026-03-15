@@ -2,6 +2,7 @@ import { ref, reactive, watch } from 'vue'
 import { createGlobalState } from '@vueuse/core'
 import { startOfDay, subDays } from 'date-fns'
 import type { DashboardFilters } from '#/src/preload/index.d'
+import { useDatabase } from '@renderer/composables/useDatabase'
 
 export const useFilters = createGlobalState(() => {
   const filters = reactive({
@@ -39,6 +40,7 @@ export const useFilters = createGlobalState(() => {
       inspectionNumber: number | string
     }[]
   >([])
+  const { inspections } = useDatabase()
 
   /**
    * Maps the reactive `filters` object into the `DashboardFilters` format
@@ -55,7 +57,7 @@ export const useFilters = createGlobalState(() => {
   })
 
   watch(
-    filters,
+    [filters, inspections],
     async () => {
       const f = buildApiFilters()
 
@@ -76,7 +78,7 @@ export const useFilters = createGlobalState(() => {
       compliancePerItemData.value = await window.api.inspection.getCompliancePerItem(f)
       recentInspections.value = await window.api.inspection.getRecentInspections(f)
     },
-    { immediate: true }
+    { immediate: true, deep: true }
   )
 
   return {
