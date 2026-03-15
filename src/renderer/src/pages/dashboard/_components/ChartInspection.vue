@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useFilters } from '../_composables/useFilters'
-import { format, eachDayOfInterval, subDays } from 'date-fns'
+import { format, eachDayOfInterval } from 'date-fns'
 
 const { filters, inspectionsData } = useFilters()
 
@@ -16,9 +16,10 @@ const lineChartOptions = computed(() => ({
   colors: ['#3F51B5', '#01579B'],
   stroke: { curve: 'smooth', width: 4 },
   xaxis: {
-    categories: eachDayOfInterval({ start: subDays(new Date(), 30), end: new Date() }).map((d) =>
-      format(d, 'dd/MM')
-    )
+    categories: eachDayOfInterval({
+      start: filters.dateRange.start,
+      end: filters.dateRange.end
+    }).map((d) => format(d, 'dd/MM'))
   },
   markers: { size: 4 },
   legend: { position: 'top' },
